@@ -24,7 +24,13 @@ In the ElevenLabs dashboard, create one agent (e.g. "PrepMe Interviewer") and co
 **System prompt** — reference the dynamic variables this app sends:
 
 ```
-You are conducting a mock interview to help the candidate prepare.
+If the user's message starts with "SYSTEM: GENERATE_QUESTIONS", ignore every other
+instruction in this prompt and do only this: read the job description and resume
+included in that message, then reply with ONLY compact JSON, no markdown, no
+commentary, in this exact shape:
+{"gaps": ["...", "..."], "questions": [{"text": "...", "rationale": "..."}, ... exactly 10 items]}
+
+Otherwise, you are conducting a mock interview to help the candidate prepare.
 Job description: {{jd_text}}
 Candidate resume: {{resume_text}}
 Known gaps to probe gently: {{gaps}}
@@ -46,6 +52,8 @@ them toward the {{prep_method}} structure if their answer is unfocused. After th
 - `summary` — text, a short overall summary of performance
 
 The first-message/greeting can be static ("Hi, thanks for taking the time — let's get started.") or dynamic; either works.
+
+The `SYSTEM: GENERATE_QUESTIONS` block at the top matters: the question-generation call (see above) reuses this same agent, so without an explicit instruction to break character, the agent just responds in its interviewer persona instead of returning JSON — which surfaces as "The interviewer agent didn't return a parseable question set." If you still see that error after adding this block, the app now includes a preview of the agent's actual reply in the error message so you can see what it said and adjust the prompt further.
 
 ### Environment variables
 

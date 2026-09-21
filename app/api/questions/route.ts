@@ -5,7 +5,8 @@ import { InterviewQuestion } from "@/lib/types";
 export const runtime = "nodejs";
 
 function buildPrompt(jdText: string, resumeText: string, prepMethod: string) {
-  return `You are prepping a candidate for their first interview. Read the job description and resume below, identify the 3-6 biggest gaps between what the role wants and what the resume shows (skills, experience depth, missing keywords), then write the 10 interview questions this candidate is most likely to be asked. The candidate will answer using the ${prepMethod} storytelling framework.
+  return `SYSTEM: GENERATE_QUESTIONS
+Read the job description and resume below, identify the 3-6 biggest gaps between what the role wants and what the resume shows (skills, experience depth, missing keywords), then write the 10 interview questions this candidate is most likely to be asked. The candidate will answer using the ${prepMethod} storytelling framework.
 
 JOB DESCRIPTION:
 ${jdText}
@@ -40,7 +41,11 @@ export async function POST(req: NextRequest) {
 
     if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
       return NextResponse.json(
-        { error: "The interviewer agent didn't return a parseable question set. Check your agent's system prompt (see README.md)." },
+        {
+          error:
+            "The interviewer agent didn't return a parseable question set. Check your agent's system prompt (see README.md).",
+          agentResponsePreview: raw.slice(0, 500),
+        },
         { status: 502 }
       );
     }

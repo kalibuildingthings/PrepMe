@@ -26,7 +26,11 @@ export default function PrepMethodPage() {
         body: JSON.stringify({ jdText, resumeText, prepMethod: selected }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) {
+        throw new Error(
+          data.agentResponsePreview ? `${data.error}\n\nAgent said: "${data.agentResponsePreview}"` : data.error
+        );
+      }
       setGapsAndQuestions(data.gaps, data.questions);
       completeOnboarding();
       router.push("/onboarding/ready");
@@ -76,7 +80,7 @@ export default function PrepMethodPage() {
           ))}
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="whitespace-pre-wrap text-sm text-red-500">{error}</p>}
       </div>
 
       <div className="px-6 pb-8">
