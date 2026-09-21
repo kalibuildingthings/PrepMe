@@ -13,7 +13,7 @@ A voice-first PWA that preps you for the interview you just got invited to. You 
 
 Everything voice-related is one ElevenLabs Conversational AI **agent** that you create once in the [ElevenLabs dashboard](https://elevenlabs.io/app/conversational-ai). The app talks to it in two ways:
 
-1. **Question generation** (`lib/elevenlabs/server.ts` → `simulateAgentText`): before the live call, the server runs a short text-only turn against the same agent (`/v1/convai/agents/{id}/simulate-conversation`) asking it to read the JD + resume and return the 10 likely questions and gap analysis as JSON.
+1. **Question generation** (`lib/elevenlabs/server.ts` → `getAgentTextReply`): before the live call, the server opens the same real-time conversation WebSocket the browser uses for the live interview, sends one text `user_message` (skipping audio entirely), and reads back the agent's text reply asking it to read the JD + resume and return the 10 likely questions and gap analysis as JSON.
 2. **The live interview** (`lib/elevenlabs/client.ts` + `app/session/page.tsx`): the browser opens a private WebSocket session to the agent via a server-issued signed URL, so your API key never reaches the client. The JD, resume, gaps, prep method, and question list are passed in as **dynamic variables** so your agent's system prompt can reference them.
 3. **Scoring** (`app/api/session/analysis/route.ts`): after the call ends, the server fetches `GET /v1/convai/conversations/{id}` and reads whatever the agent's configured "data collection" extracted from the transcript.
 
