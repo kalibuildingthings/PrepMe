@@ -9,8 +9,7 @@ import { PrepMethod } from "@/lib/types";
 
 export default function PrepMethodPage() {
   const router = useRouter();
-  const { prepMethod, setPrepMethod, setGapsAndQuestions, jdText, resumeText, recruiterInfo, completeOnboarding } =
-    usePrepMeStore();
+  const { prepMethod, setPrepMethod, setGapsAndQuestions, jdText, resumeText, completeOnboarding } = usePrepMeStore();
   const [selected, setSelected] = useState<PrepMethod | null>(prepMethod);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -24,7 +23,7 @@ export default function PrepMethodPage() {
       const res = await fetch("/api/questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jdText, resumeText, recruiterInfo, prepMethod: selected }),
+        body: JSON.stringify({ jdText, resumeText, prepMethod: selected }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -40,7 +39,7 @@ export default function PrepMethodPage() {
 
   return (
     <main className="flex min-h-screen flex-col">
-      <Stepper step={3} total={4} />
+      <Stepper step={2} total={3} />
       <div className="flex-1 space-y-4 px-6 py-6">
         <div>
           <h1 className="text-2xl font-bold text-ink">Pick your prep method</h1>

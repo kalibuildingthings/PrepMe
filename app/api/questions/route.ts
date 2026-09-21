@@ -1,28 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { simulateAgentText } from "@/lib/elevenlabs/server";
-import { InterviewQuestion, RecruiterInfo } from "@/lib/types";
+import { InterviewQuestion } from "@/lib/types";
 
 export const runtime = "nodejs";
 
-function buildPrompt(jdText: string, resumeText: string, recruiterInfo: RecruiterInfo, prepMethod: string) {
-  const recruiterBlock = recruiterInfo.hasInfo
-    ? `The recruiter also shared this context — weigh it heavily:
-- Process steps: ${recruiterInfo.processSteps || "n/a"}
-- Topics to cover: ${recruiterInfo.topicsToCover || "n/a"}
-- What's being evaluated: ${recruiterInfo.evaluationCriteria || "n/a"}
-- Values assessed: ${recruiterInfo.valuesAssessed || "n/a"}
-- Example questions given: ${recruiterInfo.exampleQuestions || "n/a"}`
-    : "The recruiter didn't share extra details, so infer everything from the JD and resume.";
-
-  return `You are prepping a candidate for their first interview. Read the job description and resume below, identify the 3-6 biggest gaps between what the role wants and what the resume shows (skills, experience depth, missing keywords), then write the 10 interview questions this candidate is most likely to be asked, prioritizing anything from the recruiter context. The candidate will answer using the ${prepMethod} storytelling framework.
+function buildPrompt(jdText: string, resumeText: string, prepMethod: string) {
+  return `You are prepping a candidate for their first interview. Read the job description and resume below, identify the 3-6 biggest gaps between what the role wants and what the resume shows (skills, experience depth, missing keywords), then write the 10 interview questions this candidate is most likely to be asked. The candidate will answer using the ${prepMethod} storytelling framework.
 
 JOB DESCRIPTION:
 ${jdText}
 
 RESUME:
 ${resumeText}
-
-${recruiterBlock}
 
 Respond with ONLY compact JSON, no markdown, in this exact shape:
 {"gaps": ["...", "..."], "questions": [{"text": "...", "rationale": "..."}, ... exactly 10 items]}`;
@@ -39,14 +28,14 @@ function extractJson(raw: string): { gaps: string[]; questions: { text: string; 
 }
 
 export async function POST(req: NextRequest) {
-  const { jdText, resumeText, recruiterInfo, prepMethod } = await req.json();
+  const { jdText, resumeText, prepMethod } = await req.json();
 
   if (!jdText || !resumeText || !prepMethod) {
     return NextResponse.json({ error: "Missing jdText, resumeText, or prepMethod." }, { status: 400 });
   }
 
   try {
-    const raw = await simulateAgentText(buildPrompt(jdText, resumeText, recruiterInfo, prepMethod));
+    const raw = await simulateAgentText(buildPrompt(jdText, resumeText, prepMethod));
     const parsed = extractJson(raw);
 
     if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {

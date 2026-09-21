@@ -2,32 +2,14 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import {
-  BillingCycle,
-  InterviewQuestion,
-  OnboardingState,
-  PrepMethod,
-  RecruiterInfo,
-  SessionResult,
-  Tier,
-} from "./types";
+import { BillingCycle, InterviewQuestion, OnboardingState, PrepMethod, SessionResult, Tier } from "./types";
 import { todayKey, UsageLog } from "./usage";
-
-const emptyRecruiterInfo: RecruiterInfo = {
-  processSteps: "",
-  topicsToCover: "",
-  evaluationCriteria: "",
-  valuesAssessed: "",
-  exampleQuestions: "",
-  hasInfo: false,
-};
 
 const emptyOnboarding: OnboardingState = {
   jdUrl: "",
   jdText: "",
   resumeFileName: "",
   resumeText: "",
-  recruiterInfo: emptyRecruiterInfo,
   prepMethod: null,
   gaps: [],
   questions: [],
@@ -43,7 +25,6 @@ interface PrepMeState extends OnboardingState {
 
   setJd: (jdUrl: string, jdText: string) => void;
   setResume: (fileName: string, text: string) => void;
-  setRecruiterInfo: (info: RecruiterInfo) => void;
   setPrepMethod: (method: PrepMethod) => void;
   setGapsAndQuestions: (gaps: string[], questions: InterviewQuestion[]) => void;
   completeOnboarding: () => void;
@@ -66,7 +47,6 @@ export const usePrepMeStore = create<PrepMeState>()(
 
       setJd: (jdUrl, jdText) => set({ jdUrl, jdText }),
       setResume: (resumeFileName, resumeText) => set({ resumeFileName, resumeText }),
-      setRecruiterInfo: (recruiterInfo) => set({ recruiterInfo }),
       setPrepMethod: (prepMethod) => set({ prepMethod }),
       setGapsAndQuestions: (gaps, questions) => set({ gaps, questions }),
       completeOnboarding: () => set({ onboardingComplete: true }),

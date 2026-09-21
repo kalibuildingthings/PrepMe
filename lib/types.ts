@@ -1,14 +1,5 @@
 export type PrepMethod = "STAR" | "STAR-L" | "SOAR" | "DIGS";
 
-export interface RecruiterInfo {
-  processSteps: string;
-  topicsToCover: string;
-  evaluationCriteria: string;
-  valuesAssessed: string;
-  exampleQuestions: string;
-  hasInfo: boolean;
-}
-
 export interface InterviewQuestion {
   id: string;
   text: string;
@@ -47,7 +38,6 @@ export interface OnboardingState {
   jdText: string;
   resumeFileName: string;
   resumeText: string;
-  recruiterInfo: RecruiterInfo;
   prepMethod: PrepMethod | null;
   gaps: string[];
   questions: InterviewQuestion[];
