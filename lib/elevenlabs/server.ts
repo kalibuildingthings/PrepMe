@@ -52,7 +52,10 @@ export async function simulateAgentText(userMessage: string): Promise<string> {
           first_message: userMessage,
         },
       },
-      new_turns_limit: 1,
+      // The agent speaks its own greeting first (turn 1), then our message
+      // (turn 2), then its actual reply to it (turn 3) — cap too low and
+      // simulate-conversation stops before that reply ever happens.
+      new_turns_limit: 3,
     }),
   });
   if (!res.ok) {
@@ -60,8 +63,9 @@ export async function simulateAgentText(userMessage: string): Promise<string> {
   }
   const data = await res.json();
   const turns = data.simulated_conversation ?? [];
-  const agentTurn = turns.find((t: { role: string }) => t.role === "agent");
-  return agentTurn?.message ?? "";
+  const agentTurns = turns.filter((t: { role: string }) => t.role === "agent");
+  const lastAgentTurn = agentTurns[agentTurns.length - 1];
+  return lastAgentTurn?.message ?? "";
 }
 
 export interface ConversationAnalysis {
