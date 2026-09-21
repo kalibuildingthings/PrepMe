@@ -1,3 +1,5 @@
+import WebSocket from "ws";
+
 const BASE_URL = "https://api.elevenlabs.io";
 
 function requireEnv(name: string): string {
@@ -35,37 +37,89 @@ export async function getSignedUrl(): Promise<string> {
 }
 
 /**
- * Runs a short, text-only simulated conversation against the interviewer
- * agent to have its LLM produce the 10 likely interview questions and the
- * resume/JD gap analysis shown on the dashboard before the live voice
- * session starts. This reuses the same agent (and therefore the same
- * ElevenLabs API key) rather than introducing a second AI vendor.
+ * Gets one real text reply out of the interviewer agent — used to have its
+ * LLM produce the 10 likely interview questions and the resume/JD gap
+ * analysis shown on the dashboard before the live voice session starts.
+ *
+ * This opens the same real-time conversation WebSocket the browser uses for
+ * the live interview (via a signed URL), but sends a text `user_message`
+ * event instead of audio, so no TTS/STT round-trip happens. This reuses the
+ * same agent (and therefore the same ElevenLabs API key) rather than
+ * introducing a second AI vendor.
+ *
+ * The agent auto-plays its own greeting as soon as the session opens,
+ * before it's heard anything from us — so the first `agent_response` is
+ * always that greeting, and our text only gets a real answer once we send
+ * it after that greeting arrives (or after a short timeout, in case the
+ * agent has no configured greeting at all).
  */
-export async function simulateAgentText(userMessage: string): Promise<string> {
-  const agentId = requireEnv("ELEVENLABS_AGENT_ID");
-  const res = await fetch(`${BASE_URL}/v1/convai/agents/${agentId}/simulate-conversation`, {
-    method: "POST",
-    headers: headers(),
-    body: JSON.stringify({
-      simulation_specification: {
-        simulated_user_config: {
-          first_message: userMessage,
-        },
-      },
-      // The agent speaks its own greeting first (turn 1), then our message
-      // (turn 2), then its actual reply to it (turn 3) — cap too low and
-      // simulate-conversation stops before that reply ever happens.
-      new_turns_limit: 3,
-    }),
+export async function getAgentTextReply(userMessage: string): Promise<string> {
+  const signedUrl = await getSignedUrl();
+
+  return new Promise<string>((resolve, reject) => {
+    const ws = new WebSocket(signedUrl);
+    let sentUserMessage = false;
+    let greetingTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error("Timed out waiting for a reply from the interviewer agent."));
+    }, 45_000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      if (greetingTimer) clearTimeout(greetingTimer);
+      ws.close();
+    }
+
+    function sendUserMessage() {
+      if (sentUserMessage) return;
+      sentUserMessage = true;
+      if (greetingTimer) clearTimeout(greetingTimer);
+      ws.send(JSON.stringify({ type: "user_message", text: userMessage }));
+    }
+
+    ws.on("open", () => {
+      // In case the agent has no greeting configured and never sends an
+      // initial agent_response, don't wait forever to send our message.
+      greetingTimer = setTimeout(sendUserMessage, 4_000);
+    });
+
+    ws.on("message", (raw) => {
+      let event: { type?: string; agent_response_event?: { agent_response?: string } };
+      try {
+        event = JSON.parse(raw.toString());
+      } catch {
+        return;
+      }
+
+      if (event.type === "ping") {
+        ws.send(JSON.stringify({ type: "pong" }));
+        return;
+      }
+
+      if (event.type === "agent_response") {
+        if (!sentUserMessage) {
+          // This is the agent's own opening greeting — ignore it and now
+          // ask our real question.
+          sendUserMessage();
+          return;
+        }
+        const text = event.agent_response_event?.agent_response ?? "";
+        cleanup();
+        resolve(text);
+      }
+    });
+
+    ws.on("error", (err) => {
+      cleanup();
+      reject(err instanceof Error ? err : new Error(String(err)));
+    });
+
+    ws.on("close", () => {
+      clearTimeout(timeout);
+    });
   });
-  if (!res.ok) {
-    throw new Error(`ElevenLabs simulate-conversation failed (${res.status}): ${await res.text()}`);
-  }
-  const data = await res.json();
-  const turns = data.simulated_conversation ?? [];
-  const agentTurns = turns.filter((t: { role: string }) => t.role === "agent");
-  const lastAgentTurn = agentTurns[agentTurns.length - 1];
-  return lastAgentTurn?.message ?? "";
 }
 
 export interface ConversationAnalysis {

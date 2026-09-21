@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { simulateAgentText } from "@/lib/elevenlabs/server";
+import { getAgentTextReply } from "@/lib/elevenlabs/server";
 import { InterviewQuestion } from "@/lib/types";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 function buildPrompt(jdText: string, resumeText: string, prepMethod: string) {
   return `SYSTEM: GENERATE_QUESTIONS
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const raw = await simulateAgentText(buildPrompt(jdText, resumeText, prepMethod));
+    const raw = await getAgentTextReply(buildPrompt(jdText, resumeText, prepMethod));
     const parsed = extractJson(raw);
 
     if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
