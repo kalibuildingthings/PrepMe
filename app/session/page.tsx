@@ -10,8 +10,7 @@ import { remainingMinutesToday } from "@/lib/usage";
 export default function SessionPage() {
   const router = useRouter();
   const store = usePrepMeStore();
-  const { jdText, resumeText, gaps, prepMethod, questions, recruiterInfo, tier, usage, logMinutesUsed, addResult } =
-    store;
+  const { jdText, resumeText, gaps, prepMethod, questions, tier, usage, logMinutesUsed, addResult } = store;
 
   const [phase, setPhase] = useState<"idle" | "connecting" | "live" | "wrapping" | "error">("idle");
   const [error, setError] = useState("");
@@ -74,7 +73,6 @@ export default function SessionPage() {
         gaps,
         prepMethod: prepMethod ?? "STAR",
         questions: questions.map((q) => ({ id: q.id, text: q.text })),
-        recruiterContext: JSON.stringify(recruiterInfo),
       });
 
       startedRef.current = Date.now();

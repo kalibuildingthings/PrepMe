@@ -61,7 +61,7 @@ export default function JdResumePage() {
 
   return (
     <main className="flex min-h-screen flex-col">
-      <Stepper step={1} total={4} />
+      <Stepper step={1} total={3} />
       <div className="flex-1 space-y-6 px-6 py-6">
         <div>
           <h1 className="text-2xl font-bold text-ink">The job &amp; your resume</h1>
@@ -123,7 +123,7 @@ export default function JdResumePage() {
       <div className="px-6 pb-8">
         <button
           disabled={!canContinue}
-          onClick={() => router.push("/onboarding/recruiter-info")}
+          onClick={() => router.push("/onboarding/prep-method")}
           className="btn-primary w-full"
         >
           Continue

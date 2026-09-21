@@ -10,7 +10,6 @@ export interface StartInterviewParams {
   gaps: string[];
   prepMethod: string;
   questions: { id: string; text: string }[];
-  recruiterContext: string;
 }
 
 /**
@@ -37,7 +36,6 @@ export function useInterviewConversation(onEnd: (conversationId: string | null) 
           resume_text: params.resumeText.slice(0, 6000),
           gaps: params.gaps.join("; "),
           prep_method: params.prepMethod,
-          recruiter_context: params.recruiterContext.slice(0, 3000),
           questions_json: JSON.stringify(params.questions),
         },
       });
